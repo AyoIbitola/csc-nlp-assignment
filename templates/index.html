@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Q&A System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>NLP Q&A System</h1>
+            <p class="subtitle">Powered by Gemini LLM</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <textarea id="questionInput" placeholder="Ask anything..."></textarea>
+                <button id="askBtn" onclick="askQuestion()">
+                    <span>Ask AI</span>
+                    <div class="loader" id="loader"></div>
+                </button>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <div class="result-card">
+                    <h3>Processed Question</h3>
+                    <p id="processedQuestion" class="code-style"></p>
+                </div>
+                
+                <div class="result-card answer-card">
+                    <h3>AI Answer</h3>
+                    <div id="answerText" class="markdown-body"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Project by Ayomide Ibitola (23CG0304077)</p>
+        </footer>
+    </div>
+
+    <script>
+        async function askQuestion() {
+            const input = document.getElementById('questionInput');
+            const btn = document.getElementById('askBtn');
+            const loader = document.getElementById('loader');
+            const results = document.getElementById('resultsSection');
+            const processedEl = document.getElementById('processedQuestion');
+            const answerEl = document.getElementById('answerText');
+
+            const question = input.value.trim();
+            if (!question) return;
+
+            // UI State: Loading
+            btn.disabled = true;
+            btn.classList.add('loading');
+            loader.style.display = 'block';
+            results.classList.remove('visible');
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    answerEl.textContent = "Error: " + data.error;
+                } else {
+                    processedEl.textContent = data.processed_question;
+                    // Simple formatting for answer (converting newlines to breaks)
+                    answerEl.innerHTML = data.answer.replace(/\n/g, '<br>');
+                    results.classList.add('visible');
+                }
+            } catch (err) {
+                answerEl.textContent = "Network Error: " + err;
+                results.classList.add('visible');
+            } finally {
+                // UI State: Reset
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
